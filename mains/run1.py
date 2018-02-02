@@ -77,17 +77,8 @@ def TuShiBie():
     # out.show()
     draw = ImageDraw.Draw(out) # 创建一个画笔
 
-    # 得到小跳棋的顶部的圆球，并且将颜色换成red,用来过滤颜色造成的中心点定位影响
-    isRed=0
-    for y in range(out.height):
-        for x in range(out.width):
-            cur_pixel = out.getpixel((x, y)) # 获得图像的rgba值
-            if(cur_pixel[0]==53 and cur_pixel[1]==54 and cur_pixel[2]==62):
-                isRed=1
-                draw.ellipse((x-27,y-3,x+40,y+60), fill = "red") # 画一个红色的圆圈，覆盖掉顶部圆球
-                break
-        if(isRed==1):
-            break
+    toRed(out,draw) # 得到小跳棋的顶部的圆球，并且将颜色换成red,用来过滤颜色造成的中心点定位影响
+    toRed2(out,draw) # 得到小跳棋的顶部的圆球下面的最近的上半身，并且将颜色换成red,用来过滤颜色造成的中心点定位影响
 
     DownCenterX=1000000 # 下一个板块的中心点的最左边的X坐标
     DownCenterY=0 # 找到下一个板块的中心的点的Y坐标
@@ -138,13 +129,9 @@ def TuShiBie():
         if thisNum2>upNum2:
             upNum2=thisNum2
             thisCenterY=y+5 # 这里的+5是偏差量
-
     print("当前坐标",thisCenterX,thisCenterY) # 当前板块的中心点坐标
-
-
     draw.ellipse((thisCenterX,thisCenterY,thisCenterX+6,thisCenterY+6), fill = "red")
     out.save("z:/AdbJump/asd.png",'png')
-
 
     # 求出两点的距离    根号下[(x1-x2)的平方+(y1-y2)的平方]
     d=math.sqrt((thisCenterX-DownCenterX)*(thisCenterX-DownCenterX) + (thisCenterY-DownCenterY)*(thisCenterY-DownCenterY))
@@ -173,15 +160,26 @@ def TuShiBie():
         if(len(isSuccess)<2): #如果成功数据只有2个或1个，则，直接取第一个的时间
             timeNum=int(isSuccess[0])
         else: # 否则取时间点的中间的一个
-            timeNum=int(isSuccess[int(len(isSuccess)/2)])
+            timeNum=int(isSuccess[int(len(isSuccess)/2)])-30
         print("相似成功时间",timeNum)
-    if(len(isFail)!=0): # 有失败数据就进行排序
-        isFail=sorted(isFail)
-        if(isFail[len(isFail)-1]<=timeNum): # 失败时间中最大的一个时间还小于等于计算的可能时间
-            if(len(isFail)<15): # 如果小于当前时间的失败数小于20，则继续往下减时间
-                timeNum=isFail[0]-20
-        else: # 如果往下递减20次还是失败，则往上递增
-            timeNum=isFail[len(isFail)-1]+20 # 最大的一个时间+20毫秒
+
+        # 拿当前成功时间跟失败时间对比。如果出现在了失败时间，则重新按照失败时间计算
+        if(len(isFail)!=0): # 有失败数据就进行排序
+            isFail=sorted(isFail)
+            for etInd in range(len(isFail)):
+                if( abs(isFail[etInd]-timeNum)<5 ):
+                    timeNum=isFail[etInd]-20
+                    print("成功时间出现在失败时间,新的时间",timeNum)
+                    break
+    else:
+        if(len(isFail)!=0): # 有失败数据就进行排序
+            isFail=sorted(isFail)
+            if(isFail[len(isFail)-1]<=timeNum): # 失败时间中最大的一个时间还小于等于计算的可能时间
+                if(len(isFail)<15): # 如果小于当前时间的失败数小于20，则继续往下减时间
+                    timeNum=isFail[0]-30
+            else: # 如果往下递减20次还是失败，则往上递增
+                timeNum=isFail[len(isFail)-1]+20 # 最大的一个时间+20毫秒
+            print("失败计算时间",timeNum)
 
     swipe(int(timeNum))
     arrData.append('%d:%d' % (int(d),int(timeNum)))
@@ -195,8 +193,7 @@ def TuShiBie():
 """
 def swipe(timeNum):
     os.system("adb shell input swipe 500 500 501 501 %d" % timeNum) # 长按屏幕，
-    time.sleep(2) # 暂停  秒
-
+    time.sleep(1.5) # 暂停  秒
 
 """
 重新开始
@@ -206,8 +203,35 @@ def restart():
     os.system("adb shell input tap 540 1580") # 点击再来一次
     time.sleep(2) # 暂停  秒
 
+"""
+得到小跳棋的顶部的圆球，并且将颜色换成red,用来过滤颜色造成的中心点定位影响
+"""
+def toRed(out,draw):
+    isRed=0
+    for y in range(out.height):
+        for x in range(out.width):
+            cur_pixel = out.getpixel((x, y)) # 获得图像的rgba值
+            if(cur_pixel[0]==53 and cur_pixel[1]==54 and cur_pixel[2]==62):
+                isRed=1
+                draw.ellipse((x-27,y-3,x+40,y+60), fill = "red") # 画一个红色的圆圈，覆盖掉顶部圆球
+                break
+        if(isRed==1):
+            break
 
-
+"""
+得到小跳棋的顶部的圆球下面的最近的上半身，并且将颜色换成red,用来过滤颜色造成的中心点定位影响
+"""
+def toRed2(out,draw):
+    isRed=0
+    for y in range(out.height):
+        for x in range(out.width):
+            cur_pixel = out.getpixel((x, y)) # 获得图像的rgba值
+            if(cur_pixel[0]==52 and cur_pixel[1]==53 and cur_pixel[2]==56):
+                isRed=1
+                draw.ellipse((x-27,y-3,x+37,y+60), fill = "red") # 画一个红色的圆圈，覆盖掉顶部圆球
+                break
+        if(isRed==1):
+            break
 
 
 # startJump() # 初始化游戏（进入游戏，开始游戏）
@@ -216,5 +240,5 @@ while(True):
     JieTu() # 开始截屏
     # 开始图片识别
     TuShiBie()
-    time.sleep(2) # 暂停  秒
+    time.sleep(1) # 暂停  秒
 
