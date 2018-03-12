@@ -130,7 +130,7 @@ def TuShiBie():
 """
 def swipe(timeNum):
     os.system("adb shell input swipe 500 500 501 501 %d" % timeNum) # 长按屏幕，
-    time.sleep(1.5) # 暂停  秒
+    time.sleep(1) # 暂停  秒
 
 """
 重新开始
@@ -177,5 +177,5 @@ while(True):
     JieTu() # 开始截屏
     # 开始图片识别
     TuShiBie()
-    time.sleep(1) # 暂停  秒
+    time.sleep(0.5) # 暂停  秒
 
