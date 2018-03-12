@@ -36,6 +36,7 @@ def startJump():
     os.system("adb shell input tap 540 1350") # 点击开始游戏（跳一跳的开始）
     time.sleep(1) # 暂停  秒
 
+__author__ = '孙帅'
 """
 截屏
 """
@@ -51,8 +52,8 @@ def TuShiBie():
     im=Image.open(thisImgSrc)
     cur_pixel = im.getpixel((5, 5)) # 获得图像的rgba值
     if(cur_pixel[0]>40 and cur_pixel[0]<55 and cur_pixel[1]>40 and cur_pixel[1]<50 and cur_pixel[2]>30 and cur_pixel[2]<60): #如果像素点的颜色是这一个，代表失败
-        restart()
-        return
+        restart() # 失败了重新开始
+        return # 结束掉下面的操作
 
     box = (0,720,1080,1520) #创建一个选区范围【左、上、右、下】
     out= im.crop(box)  #截取获得新的图像（region就是新的图像）
