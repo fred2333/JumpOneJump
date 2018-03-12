@@ -19,20 +19,7 @@ import time
 from PIL import Image,ImageDraw
 import math
 
-
 thisImgSrc="z:/AdbJump/screenshot.png" # 截图pull到电脑的位置
-thisMemorySrc="z:/AdbJump/Jump.txt" # 训练的数据存储的位置
-
-
-arrData=[] # 训练数据，保存到数组格式中
-try:
-    f2 = open(thisMemorySrc, 'r')
-    TrainingData=f2.read()
-    arrData=TrainingData.split('\n')
-    # print(arrData)
-    f2.close()
-except:pass
-
 
 """
 初始化游戏，开始游戏
@@ -64,11 +51,6 @@ def TuShiBie():
     im=Image.open(thisImgSrc)
     cur_pixel = im.getpixel((5, 5)) # 获得图像的rgba值
     if(cur_pixel[0]>40 and cur_pixel[0]<55 and cur_pixel[1]>40 and cur_pixel[1]<50 and cur_pixel[2]>30 and cur_pixel[2]<60): #如果像素点的颜色是这一个，代表失败
-        arrData[len(arrData)-1]=arrData[len(arrData)-1]+":error"
-        print(arrData[len(arrData)-1]);
-        f = open(thisMemorySrc, 'a')
-        f.write(':error')
-        f.close()
         restart()
         return
 
@@ -135,57 +117,12 @@ def TuShiBie():
 
     # 求出两点的距离    根号下[(x1-x2)的平方+(y1-y2)的平方]
     d=math.sqrt((thisCenterX-DownCenterX)*(thisCenterX-DownCenterX) + (thisCenterY-DownCenterY)*(thisCenterY-DownCenterY))
+    if d<150:
+        d=150
     print("两点距离",int(d))
-    timeNum=int((d*math.pi)/2) # 默认的屏幕长按时间
-    ########## 开始读训练文本，有没有相近的位置和时间轴并且没有失败
-    isSuccess=[] #成功的数据
-    isFail=[] #失败的数据
-    for i in range(len(arrData)):
-        da=arrData[i]
-        if(len(da)!=0):
-            # 开始进行数据判断
-            # print("da",da)
-            # 开始根据   :  截取 ( 第一位是距离，第二位是点击时间，[第三位是失败信息])
-            OneDa=da.split(':')
-            # print(OneDa)
-            if( abs( int(OneDa[0]) - d )<5 ):
-                # print("距离差不多")
-                if(len(OneDa)==2): # 单行数据只有两个位，代表是成功数据，
-                    isSuccess.append(int(OneDa[1])) # 成功数据添加到成功数据的数组中
-                else:
-                    isFail.append(int(OneDa[1])) # 失败数据添加到数百数据的数组中
-
-    if(len(isSuccess)!=0): # 有成功数据就对数据进行排序
-        isSuccess=sorted(isSuccess)
-        if(len(isSuccess)<2): #如果成功数据只有2个或1个，则，直接取第一个的时间
-            timeNum=int(isSuccess[0])
-        else: # 否则取时间点的中间的一个
-            timeNum=int(isSuccess[int(len(isSuccess)/2)])-30
-        print("相似成功时间",timeNum)
-
-        # 拿当前成功时间跟失败时间对比。如果出现在了失败时间，则重新按照失败时间计算
-        if(len(isFail)!=0): # 有失败数据就进行排序
-            isFail=sorted(isFail)
-            for etInd in range(len(isFail)):
-                if( abs(isFail[etInd]-timeNum)<5 ):
-                    timeNum=isFail[etInd]-20
-                    print("成功时间出现在失败时间,新的时间",timeNum)
-                    break
-    else:
-        if(len(isFail)!=0): # 有失败数据就进行排序
-            isFail=sorted(isFail)
-            if(isFail[len(isFail)-1]<=timeNum): # 失败时间中最大的一个时间还小于等于计算的可能时间
-                if(len(isFail)<15): # 如果小于当前时间的失败数小于20，则继续往下减时间
-                    timeNum=isFail[0]-30
-            else: # 如果往下递减20次还是失败，则往上递增
-                timeNum=isFail[len(isFail)-1]+20 # 最大的一个时间+20毫秒
-            print("失败计算时间",timeNum)
+    timeNum=int(d*1.37)
 
     swipe(int(timeNum))
-    arrData.append('%d:%d' % (int(d),int(timeNum)))
-    f = open(thisMemorySrc, 'a')
-    f.write('\n%d:%d' % (d,timeNum))
-    f.close()
 
 """
 长按屏幕
